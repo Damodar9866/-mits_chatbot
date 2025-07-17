@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITS Chatbot - Your Virtual Assistant</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .chat-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        
+        .chat-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .refresh-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .chat-body {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            text-align: right;
+        }
+        
+        .user-message .message-bubble {
+            background: #007bff;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 20px 20px 5px 20px;
+            display: inline-block;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .bot-message {
+            text-align: left;
+        }
+        
+        .bot-message .message-bubble {
+            background: white;
+            color: #333;
+            padding: 12px 16px;
+            border-radius: 20px 20px 20px 5px;
+            display: inline-block;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            white-space: pre-wrap;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-control {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: none;
+        }
+        
+        .send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        .send-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .send-btn:active {
+            transform: translateY(0);
+        }
+        
+        .typing-indicator {
+            display: none;
+            text-align: left;
+            padding: 10px 0;
+        }
+        
+        .typing-dots {
+            background: #e9ecef;
+            border-radius: 20px;
+            padding: 12px 16px;
+            display: inline-block;
+        }
+        
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+        
+        .quick-suggestions {
+            padding: 0 20px 20px;
+            background: white;
+        }
+        
+        .quick-suggestions h6 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .suggestion-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 5px 5px 5px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .suggestion-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chat-body {
+                height: 400px;
+            }
+            
+            .user-message .message-bubble,
+            .bot-message .message-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1><i class="fas fa-graduation-cap"></i> MITS Chatbot</h1>
+            <p>Your Virtual Assistant for Madanapalle Institute of Technology & Science</p>
+            <button class="refresh-btn" onclick="refreshData()" title="Refresh Data">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <div class="status-indicator">
+                <span id="status">Ready</span>
+            </div>
+        </div>
+        
+        <div class="chat-body" id="chat-output">
+            <div class="welcome-message">
+                <p><strong>Welcome to MITS Chatbot!</strong><br>
+                Ask me anything about Madanapalle Institute of Technology & Science.</p>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="quick-suggestions">
+            <h6>Quick Questions:</h6>
+            <button class="suggestion-btn" onclick="askQuestion('Tell me about MITS')">About MITS</button>
+            <button class="suggestion-btn" onclick="askQuestion('What courses are available?')">Courses</button>
+            <button class="suggestion-btn" onclick="askQuestion('What are the facilities?')">Facilities</button>
+            <button class="suggestion-btn" onclick="askQuestion('How do I apply for admission?')">Admissions</button>
+            <button class="suggestion-btn" onclick="askQuestion('What are the latest news?')">Latest News</button>
+            <button class="suggestion-btn" onclick="askQuestion('Where is MITS located?')">Location</button>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-group">
+                <input type="text" id="user-input" class="form-control" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                <button id="send-button" class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        let isTyping = false;
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            
+            if (message && !isTyping) {
+                displayMessage(message, 'user-message');
+                userInput.value = '';
+                
+                // Show typing indicator
+                showTypingIndicator();
+                
+                // Send message to server
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideTypingIndicator();
+                    displayMessage(data.response, 'bot-message');
+                })
+                .catch(error => {
+                    hideTypingIndicator();
+                    displayMessage('Sorry, there was an error processing your request. Please try again.', 'bot-message');
+                    console.error('Error:', error);
+                });
+            }
+        }
+        
+        function askQuestion(question) {
+            document.getElementById('user-input').value = question;
+            sendMessage();
+        }
+        
+        function displayMessage(message, className) {
+            const chatOutput = document.getElementById('chat-output');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = message;
+            
+            messageDiv.appendChild(bubbleDiv);
+            chatOutput.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            isTyping = true;
+            document.getElementById('typing-indicator').style.display = 'block';
+            document.getElementById('status').textContent = 'Typing...';
+            
+            // Scroll to bottom
+            const chatOutput = document.getElementById('chat-output');
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            isTyping = false;
+            document.getElementById('typing-indicator').style.display = 'none';
+            document.getElementById('status').textContent = 'Ready';
+        }
+        
+        function refreshData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalHTML = refreshBtn.innerHTML;
+            
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            refreshBtn.disabled = true;
+            
+            fetch('/refresh_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayMessage('Data refreshed successfully! I now have the latest information from the MITS website.', 'bot-message');
+                    document.getElementById('status').textContent = 'Updated';
+                } else {
+                    displayMessage('There was an error refreshing the data. Using cached information.', 'bot-message');
+                }
+            })
+            .catch(error => {
+                displayMessage('There was an error refreshing the data. Using cached information.', 'bot-message');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                refreshBtn.innerHTML = originalHTML;
+                refreshBtn.disabled = false;
+                setTimeout(() => {
+                    document.getElementById('status').textContent = 'Ready';
+                }, 3000);
+            });
+        }
+        
+        // Initialize with a greeting
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                displayMessage('Hello! I\'m the MITS Chatbot. Ask me anything about Madanapalle Institute of Technology & Science!', 'bot-message');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

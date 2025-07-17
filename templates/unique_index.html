@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITS Chatbot - Your Virtual Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #4CAF50;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #e9ecef;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --bubble-user: #007bff;
+            --bubble-bot: #ffffff;
+            --header-gradient: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --border-color: #444;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            --bubble-user: #0d6efd;
+            --bubble-bot: #2d2d2d;
+            --header-gradient: linear-gradient(135deg, #2d5a2d 0%, #1e3a1e 100%);
+            --bg-gradient: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: var(--bg-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header {
+            background: var(--header-gradient);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .header-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 2;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .chat-body {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--bg-color);
+            position: relative;
+        }
+
+        .chat-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-body::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .chat-body::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .message.user-message {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: var(--bubble-user);
+            color: white;
+        }
+
+        .bot-avatar {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-message .message-bubble {
+            background: var(--bubble-user);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-bubble {
+            background: var(--bubble-bot);
+            color: var(--text-color);
+            border-bottom-left-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .user-message .message-time {
+            text-align: left;
+        }
+
+        .typing-indicator {
+            display: none;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .typing-dots {
+            background: var(--bubble-bot);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 15px 20px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .quick-suggestions {
+            padding: 20px;
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .suggestions-title {
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .suggestion-btn {
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 12px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .suggestion-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 16px;
+            font-size: 16px;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-color);
+            opacity: 0.6;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .action-btn:hover {
+            opacity: 1;
+            background: var(--border-color);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .send-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .voice-recording {
+            background: #dc3545 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .welcome-message i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-color);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .status-bar.active {
+            transform: scaleX(1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chat-body {
+                height: 400px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .suggestions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom Animations */
+        .message-enter {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="status-bar" id="status-bar"></div>
+        
+        <div class="chat-header">
+            <div class="header-content">
+                <h1><i class="fas fa-graduation-cap"></i> MITS Chatbot</h1>
+                <p>Your Virtual Assistant for Madanapalle Institute of Technology & Science</p>
+            </div>
+            <div class="header-controls">
+                <button class="control-btn" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <button class="control-btn" onclick="clearChat()" title="Clear Chat">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="control-btn" onclick="refreshData()" title="Refresh Data">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-body" id="chat-output">
+            <div class="welcome-message">
+                <i class="fas fa-robot"></i>
+                <h3>Welcome to MITS Chatbot!</h3>
+                <p>I'm here to help you with information about Madanapalle Institute of Technology & Science. You can type your questions or use voice input!</p>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typing-indicator">
+            <div class="message-avatar bot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="quick-suggestions">
+            <div class="suggestions-title">Quick Questions:</div>
+            <div class="suggestions-grid">
+                <button class="suggestion-btn" onclick="askQuestion('Tell me about MITS')">
+                    <i class="fas fa-university"></i> About MITS
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What courses are available?')">
+                    <i class="fas fa-book"></i> Courses
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What are the facilities?')">
+                    <i class="fas fa-building"></i> Facilities
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('How do I apply for admission?')">
+                    <i class="fas fa-file-alt"></i> Admissions
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('What are the latest news?')">
+                    <i class="fas fa-newspaper"></i> Latest News
+                </button>
+                <button class="suggestion-btn" onclick="askQuestion('Where is MITS located?')">
+                    <i class="fas fa-map-marker-alt"></i> Location
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <div class="input-container">
+                <input type="text" id="user-input" class="form-control" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                <div class="input-actions">
+                    <button class="action-btn" onclick="toggleVoiceInput()" title="Voice Input" id="voice-btn">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="action-btn" onclick="insertEmoji()" title="Insert Emoji">
+                        <i class="fas fa-smile"></i>
+                    </button>
+                </div>
+                <button class="send-btn" onclick="sendMessage()" id="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isTyping = false;
+        let isRecording = false;
+        let recognition;
+        let currentTheme = 'light';
+        let messageCount = 0;
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('user-input').value = transcript;
+                stopVoiceInput();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                stopVoiceInput();
+            };
+
+            recognition.onend = function() {
+                stopVoiceInput();
+            };
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            
+            if (message && !isTyping) {
+                displayMessage(message, 'user-message');
+                userInput.value = '';
+                messageCount++;
+                
+                // Show typing indicator
+                showTypingIndicator();
+                
+                // Send message to server
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideTypingIndicator();
+                    displayMessage(data.response, 'bot-message');
+                })
+                .catch(error => {
+                    hideTypingIndicator();
+                    displayMessage('Sorry, there was an error processing your request. Please try again.', 'bot-message');
+                    console.error('Error:', error);
+                });
+            } else if (!message) {
+                // Shake animation for empty input
+                userInput.classList.add('shake');
+                setTimeout(() => userInput.classList.remove('shake'), 500);
+            }
+        }
+
+        function askQuestion(question) {
+            document.getElementById('user-input').value = question;
+            sendMessage();
+        }
+
+        function displayMessage(message, className) {
+            const chatOutput = document.getElementById('chat-output');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className} message-enter`;
+            
+            const isUser = className === 'user-message';
+            const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            messageDiv.innerHTML = `
+                ${!isUser ? '<div class="message-avatar bot-avatar"><i class="fas fa-robot"></i></div>' : ''}
+                <div class="message-content">
+                    <div class="message-bubble">${message}</div>
+                    <div class="message-time">${currentTime}</div>
+                </div>
+                ${isUser ? '<div class="message-avatar user-avatar"><i class="fas fa-user"></i></div>' : ''}
+            `;
+            
+            chatOutput.appendChild(messageDiv);
+            
+            // Remove welcome message if it exists
+            const welcomeMessage = chatOutput.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            // Scroll to bottom
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+            
+            // Save to localStorage
+            saveMessage(message, className, currentTime);
+        }
+
+        function showTypingIndicator() {
+            isTyping = true;
+            const indicator = document.getElementById('typing-indicator');
+            indicator.style.display = 'flex';
+            
+            // Scroll to bottom
+            const chatOutput = document.getElementById('chat-output');
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+            
+            // Show progress bar
+            document.getElementById('status-bar').classList.add('active');
+        }
+
+        function hideTypingIndicator() {
+            isTyping = false;
+            document.getElementById('typing-indicator').style.display = 'none';
+            document.getElementById('status-bar').classList.remove('active');
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                alert('Speech recognition is not supported in this browser.');
+                return;
+            }
+
+            if (isRecording) {
+                stopVoiceInput();
+            } else {
+                startVoiceInput();
+            }
+        }
+
+        function startVoiceInput() {
+            isRecording = true;
+            const voiceBtn = document.getElementById('voice-btn');
+            voiceBtn.classList.add('voice-recording');
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            
+            recognition.start();
+        }
+
+        function stopVoiceInput() {
+            isRecording = false;
+            const voiceBtn = document.getElementById('voice-btn');
+            voiceBtn.classList.remove('voice-recording');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            
+            if (recognition) {
+                recognition.stop();
+            }
+        }
+
+        function insertEmoji() {
+            const emojis = ['😀', '😊', '👍', '❤️', '😂', '🤔', '👋', '🎉', '📚', '🏫'];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            const userInput = document.getElementById('user-input');
+            userInput.value += randomEmoji;
+            userInput.focus();
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            if (currentTheme === 'light') {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+                currentTheme = 'dark';
+            } else {
+                body.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-moon';
+                currentTheme = 'light';
+            }
+            
+            localStorage.setItem('theme', currentTheme);
+        }
+
+        function clearChat() {
+            const chatOutput = document.getElementById('chat-output');
+            chatOutput.innerHTML = `
+                <div class="welcome-message">
+                    <i class="fas fa-robot"></i>
+                    <h3>Welcome to MITS Chatbot!</h3>
+                    <p>I'm here to help you with information about Madanapalle Institute of Technology & Science. You can type your questions or use voice input!</p>
+                </div>
+            `;
+            
+            localStorage.removeItem('chatHistory');
+            messageCount = 0;
+        }
+
+        function refreshData() {
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.style.animation = 'spin 1s linear infinite';
+            
+            fetch('/refresh_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayMessage('Data refreshed successfully! I now have the latest information from the MITS website.', 'bot-message');
+                } else {
+                    displayMessage('There was an error refreshing the data. Using cached information.', 'bot-message');
+                }
+            })
+            .catch(error => {
+                displayMessage('There was an error refreshing the data. Using cached information.', 'bot-message');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                refreshIcon.style.animation = '';
+            });
+        }
+
+        function saveMessage(message, className, time) {
+            const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+            chatHistory.push({ message, className, time, id: Date.now() });
+            
+            // Keep only last 100 messages
+            if (chatHistory.length > 100) {
+                chatHistory.splice(0, chatHistory.length - 100);
+            }
+            
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        }
+
+        function loadChatHistory() {
+            const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+            if (chatHistory.length > 0) {
+                const chatOutput = document.getElementById('chat-output');
+                chatOutput.innerHTML = '';
+                
+                chatHistory.forEach(item => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${item.className}`;
+                    
+                    const isUser = item.className === 'user-message';
+                    messageDiv.innerHTML = `
+                        ${!isUser ? '<div class="message-avatar bot-avatar"><i class="fas fa-robot"></i></div>' : ''}
+                        <div class="message-content">
+                            <div class="message-bubble">${item.message}</div>
+                            <div class="message-time">${item.time}</div>
+                        </div>
+                        ${isUser ? '<div class="message-avatar user-avatar"><i class="fas fa-user"></i></div>' : ''}
+                    `;
+                    
+                    chatOutput.appendChild(messageDiv);
+                });
+                
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+                messageCount = chatHistory.length;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                toggleTheme();
+            }
+            
+            // Load chat history
+            loadChatHistory();
+            
+            // Initial greeting if no history
+            if (messageCount === 0) {
+                setTimeout(() => {
+                    displayMessage('Hello! I\'m the MITS Chatbot. Ask me anything about Madanapalle Institute of Technology & Science!', 'bot-message');
+                }, 1000);
+            }
+        });
+
+        // Add CSS for spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

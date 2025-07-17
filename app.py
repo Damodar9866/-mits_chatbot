@@ -179,15 +179,7 @@ chatbot = MITSChatbot()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-@app.route('/unique')
-def unique():
-    return render_template('unique_index.html')
-
-@app.route('/test')
-def test():
-    return render_template('test_unique.html')
+    return render_template('demo.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
